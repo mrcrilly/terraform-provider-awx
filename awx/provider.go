@@ -29,6 +29,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"awx_credential_ssh": resourceCredentialSSH(),
+			"awx_credential_azure_key_vault": resourceCredentialAzure(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"awx_credentials": dataSourceCredentials(),

@@ -14,7 +14,7 @@ func resourceCredentialSSH() *schema.Resource {
 		CreateContext: resourceCredentialSSHCreate,
 		ReadContext:   resourceCredentialSSHRead,
 		UpdateContext: resourceCredentialSSHUpdate,
-		DeleteContext: resourceCredentialSSHDelete,
+		DeleteContext: awxAPIDeleteByID,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -26,27 +26,7 @@ func resourceCredentialSSH() *schema.Resource {
 			},
 			"organisation_id": &schema.Schema{
 				Type:     schema.TypeInt,
-				Optional: true,
-				ConflictsWith: []string{
-					"user_id",
-					"team_id",
-				},
-			},
-			"user_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				ConflictsWith: []string{
-					"organisation_id",
-					"team_id",
-				},
-			},
-			"team_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				ConflictsWith: []string{
-					"organisation_id",
-					"user_id",
-				},
+				Required: true,
 			},
 			"username": &schema.Schema{
 				Type:     schema.TypeString,
@@ -92,19 +72,10 @@ func resourceCredentialSSHCreate(ctx context.Context, d *schema.ResourceData, m 
 	var diags diag.Diagnostics
 	var err error
 
-	organisation_id := d.Get("organisation_id").(int)
-	user_id := d.Get("user_id").(int)
-	team_id := d.Get("team_id").(int)
-
-	result := validateOwnershipInputs(organisation_id, user_id, team_id)
-	if result != nil {
-		diags = append(diags, *result)
-		return diags
-	}
-
 	newCredential := map[string]interface{}{
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
+		"organisation_id": d.Get("organisation_id").(int),
 		"credential_type": 1, // SSH
 		"inputs": map[string]interface{}{
 			"username":            d.Get("username").(string),
@@ -116,21 +87,6 @@ func resourceCredentialSSHCreate(ctx context.Context, d *schema.ResourceData, m 
 			"become_username":     d.Get("become_username").(string),
 			"become_password":     d.Get("become_password").(string),
 		},
-	}
-
-	if organisation_id > 0 {
-		newCredential["organization"] = organisation_id
-		//d.Set("organisation_id", organisation_id)
-	}
-
-	if team_id > 0 {
-		newCredential["team"] = team_id
-		//d.Set("team_id", team_id)
-	}
-
-	if user_id > 0 {
-		newCredential["user"] = user_id
-		//d.Set("user_id", user_id)
 	}
 
 	client := m.(*awx.AWX)
@@ -175,9 +131,9 @@ func resourceCredentialSSHRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("become_method", cred.Inputs["become_method"])
 	d.Set("become_username", cred.Inputs["become_username"])
 	d.Set("become_password", cred.Inputs["become_password"])
-	d.Set("organisation_id", cred.Inputs["organization"])
-	d.Set("team_id", cred.Inputs["team"])
-	d.Set("owner_id", cred.Inputs["owner"])
+	d.Set("organisation_id", cred.OrganizationID)
+	//d.Set("team_id", cred.Inputs["team"])
+	//d.Set("owner_id", cred.Inputs["owner"])
 
 	return diags
 }
@@ -206,19 +162,20 @@ func resourceCredentialSSHUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 		id, _ := strconv.Atoi(d.Id())
 
-		organisation_id := d.Get("organisation_id").(int)
-		user_id := d.Get("user_id").(int)
-		team_id := d.Get("team_id").(int)
+		//organisation_id := d.Get("organisation_id").(int)
+		//user_id := d.Get("user_id").(int)
+		//team_id := d.Get("team_id").(int)
 
-		result := validateOwnershipInputs(organisation_id, user_id, team_id)
-		if result != nil {
-			diags = append(diags, *result)
-			return diags
-		}
+		//result := validateOwnershipInputs(organisation_id, user_id, team_id)
+		//if result != nil {
+		//	diags = append(diags, *result)
+		//	return diags
+		//}
 
 		updatedCredential := map[string]interface{}{
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
+			"organisation_id": d.Get("organisation_id").(int),
 			"credential_type": 1, // SSH
 			"inputs": map[string]interface{}{
 				"username":            d.Get("username").(string),
@@ -232,20 +189,17 @@ func resourceCredentialSSHUpdate(ctx context.Context, d *schema.ResourceData, m 
 			},
 		}
 
-		if organisation_id > 0 {
-			updatedCredential["organization"] = organisation_id
-			d.Set("organisation_id", organisation_id)
-		}
-
-		if team_id > 0 {
-			updatedCredential["team"] = team_id
-			d.Set("team_id", team_id)
-		}
-
-		if user_id > 0 {
-			updatedCredential["user"] = user_id
-			d.Set("user_id", user_id)
-		}
+		//if organisation_id > 0 {
+		//	newCredential["organization"] = organisation_id
+		//}
+		//
+		//if team_id > 0 {
+		//	newCredential["team"] = team_id
+		//}
+		//
+		//if user_id > 0 {
+		//	newCredential["user"] = user_id
+		//}
 
 		client := m.(*awx.AWX)
 		_, err = client.CredentialsService.UpdateCredentialsByID(id, updatedCredential, map[string]string{})
@@ -260,57 +214,4 @@ func resourceCredentialSSHUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	return resourceCredentialSSHRead(ctx, d, m)
-}
-
-func resourceCredentialSSHDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	id, _ := strconv.Atoi(d.Id())
-	client := m.(*awx.AWX)
-	err := client.CredentialsService.DeleteCredentialsByID(id, map[string]string{})
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to delete existing credentials",
-			Detail:   fmt.Sprintf("Unable to delete existing credentials with id %d: %s", id, err.Error()),
-		})
-	}
-
-	return diags
-}
-
-func validateOwnershipInputs(organisation_id, user_id, team_id int) *diag.Diagnostic {
-	if (organisation_id == 0) && (user_id == 0) && (team_id == 0) {
-		return &diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid ownership data received",
-			Detail:   "You must provide one of: organisation_id, user_id or team_id",
-		}
-	}
-
-	if (organisation_id > 0) && ((user_id > 0) || (team_id > 0)) {
-		return &diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid ownership data received",
-			Detail:   "You must provide only ONE of: organisation_id, user_id or team_id",
-		}
-	}
-
-	if (user_id > 0) && ((organisation_id > 0) || (team_id > 0)) {
-		return &diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid ownership data received",
-			Detail:   "You must provide only ONE of: organisation_id, user_id or team_id",
-		}
-	}
-
-	if (team_id > 0) && ((organisation_id > 0) || (user_id > 0)) {
-		return &diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid ownership data received",
-			Detail:   "You must provide only ONE of: organisation_id, user_id or team_id",
-		}
-	}
-
-	return nil
 }
