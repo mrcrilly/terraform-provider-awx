@@ -40,14 +40,6 @@ func resourceCredentialAzure() *schema.Resource {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
-				//DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				//	// Because the AWX API always returns "$encrypted$" for secret strings, we can never
-				//	// compare the value in the HCL to the API to determine if it has changed or not. This
-				//	// results in Terraform always wanting to update the value. We can either leave it to
-				//	// always update the value or use this function to essentially completely ignore changes
-				//	// to this field.
-				//	return true
-				//},
 			},
 			"tenant": &schema.Schema{
 				Type:     schema.TypeString,
@@ -111,7 +103,7 @@ func resourceCredentialAzureRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("organisation_id", cred.OrganizationID)
 	d.Set("url", cred.Inputs["url"])
 	d.Set("client", cred.Inputs["client"])
-	//d.Set("secret", cred.Inputs["secret"])
+	d.Set("secret", d.Get("secret").(string))
 	d.Set("tenant", cred.Inputs["tenant"])
 
 	return diags

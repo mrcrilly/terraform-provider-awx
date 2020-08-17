@@ -34,6 +34,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"awx_credentials": dataSourceCredentials(),
 			"awx_credential": dataSourceCredentialByID(),
+			"awx_credential_azure_key_vault": dataSourceCredentialAzure(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

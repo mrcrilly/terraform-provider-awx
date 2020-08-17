@@ -19,6 +19,14 @@ resource "awx_credential_azure_key_vault" "main" {
   organisation_id = 1
   url = "https://something.com"
   client = "1234"
-  secret = "my new secret string"
+  secret = "my new asdadssecret string"
   tenant = "mytenantid"
+}
+
+data "awx_credential_azure_key_vault" "main" {
+  credential_id = awx_credential_azure_key_vault.main.id
+}
+
+output "keyvaultcred" {
+  value = data.awx_credential_azure_key_vault.main.name
 }
