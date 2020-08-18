@@ -9,12 +9,12 @@ import (
 	"strconv"
 )
 
-func resourceCredentialAzure() *schema.Resource {
+func resourceCredentialAzureKeyVault() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCredentialAzureCreate,
-		ReadContext:   resourceCredentialAzureRead,
-		UpdateContext: resourceCredentialAzureUpdate,
-		DeleteContext: awxAPIDeleteByID,
+		CreateContext: resourceCredentialAzureKeyVaultCreate,
+		ReadContext:   resourceCredentialAzureKeyVaultRead,
+		UpdateContext: resourceCredentialAzureKeyVaultUpdate,
+		DeleteContext: CredentialsServiceDeleteByID,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -49,7 +49,7 @@ func resourceCredentialAzure() *schema.Resource {
 	}
 }
 
-func resourceCredentialAzureCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialAzureKeyVaultCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
 
@@ -78,12 +78,12 @@ func resourceCredentialAzureCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(strconv.Itoa(cred.ID))
-	resourceCredentialAzureRead(ctx, d, m)
+	resourceCredentialAzureKeyVaultRead(ctx, d, m)
 
 	return diags
 }
 
-func resourceCredentialAzureRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialAzureKeyVaultRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)
@@ -109,7 +109,7 @@ func resourceCredentialAzureRead(ctx context.Context, d *schema.ResourceData, m 
 	return diags
 }
 
-func resourceCredentialAzureUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	keys := []string{
@@ -150,5 +150,5 @@ func resourceCredentialAzureUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	return resourceCredentialAzureRead(ctx, d, m)
+	return resourceCredentialAzureKeyVaultRead(ctx, d, m)
 }

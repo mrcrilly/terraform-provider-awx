@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func awxAPIDeleteByID(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func CredentialsServiceDeleteByID(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	id, _ := strconv.Atoi(d.Id())

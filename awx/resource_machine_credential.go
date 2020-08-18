@@ -9,12 +9,12 @@ import (
 	"strconv"
 )
 
-func resourceCredentialSSH() *schema.Resource {
+func resourceCredentialMachine() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCredentialSSHCreate,
-		ReadContext:   resourceCredentialSSHRead,
-		UpdateContext: resourceCredentialSSHUpdate,
-		DeleteContext: awxAPIDeleteByID,
+		CreateContext: resourceCredentialMachineCreate,
+		ReadContext:   resourceCredentialMachineRead,
+		UpdateContext: resourceCredentialMachineUpdate,
+		DeleteContext: CredentialsServiceDeleteByID,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -68,14 +68,14 @@ func resourceCredentialSSH() *schema.Resource {
 	}
 }
 
-func resourceCredentialSSHCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialMachineCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
 
 	newCredential := map[string]interface{}{
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
-		"organisation_id": d.Get("organisation_id").(int),
+		"organization":    d.Get("organisation_id").(int),
 		"credential_type": 1, // SSH
 		"inputs": map[string]interface{}{
 			"username":            d.Get("username").(string),
@@ -101,12 +101,12 @@ func resourceCredentialSSHCreate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	d.SetId(strconv.Itoa(cred.ID))
-	resourceCredentialSSHRead(ctx, d, m)
+	resourceCredentialMachineRead(ctx, d, m)
 
 	return diags
 }
 
-func resourceCredentialSSHRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialMachineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)
@@ -132,13 +132,11 @@ func resourceCredentialSSHRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("become_username", cred.Inputs["become_username"])
 	d.Set("become_password", cred.Inputs["become_password"])
 	d.Set("organisation_id", cred.OrganizationID)
-	//d.Set("team_id", cred.Inputs["team"])
-	//d.Set("owner_id", cred.Inputs["owner"])
 
 	return diags
 }
 
-func resourceCredentialSSHUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialMachineUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	keys := []string{
@@ -161,21 +159,10 @@ func resourceCredentialSSHUpdate(ctx context.Context, d *schema.ResourceData, m 
 		var err error
 
 		id, _ := strconv.Atoi(d.Id())
-
-		//organisation_id := d.Get("organisation_id").(int)
-		//user_id := d.Get("user_id").(int)
-		//team_id := d.Get("team_id").(int)
-
-		//result := validateOwnershipInputs(organisation_id, user_id, team_id)
-		//if result != nil {
-		//	diags = append(diags, *result)
-		//	return diags
-		//}
-
 		updatedCredential := map[string]interface{}{
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
-			"organisation_id": d.Get("organisation_id").(int),
+			"organization":    d.Get("organisation_id").(int),
 			"credential_type": 1, // SSH
 			"inputs": map[string]interface{}{
 				"username":            d.Get("username").(string),
@@ -189,18 +176,6 @@ func resourceCredentialSSHUpdate(ctx context.Context, d *schema.ResourceData, m 
 			},
 		}
 
-		//if organisation_id > 0 {
-		//	newCredential["organization"] = organisation_id
-		//}
-		//
-		//if team_id > 0 {
-		//	newCredential["team"] = team_id
-		//}
-		//
-		//if user_id > 0 {
-		//	newCredential["user"] = user_id
-		//}
-
 		client := m.(*awx.AWX)
 		_, err = client.CredentialsService.UpdateCredentialsByID(id, updatedCredential, map[string]string{})
 		if err != nil {
@@ -213,5 +188,5 @@ func resourceCredentialSSHUpdate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	return resourceCredentialSSHRead(ctx, d, m)
+	return resourceCredentialMachineRead(ctx, d, m)
 }

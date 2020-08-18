@@ -28,12 +28,13 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"awx_credential_ssh": resourceCredentialSSH(),
-			"awx_credential_azure_key_vault": resourceCredentialAzure(),
+			"awx_credential_machine":         resourceCredentialMachine(),
+			"awx_credential_azure_key_vault": resourceCredentialAzureKeyVault(),
+			"awx_credential_input_source":    resourceCredentialInputSource(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"awx_credentials": dataSourceCredentials(),
-			"awx_credential": dataSourceCredentialByID(),
+			"awx_credentials":                dataSourceCredentials(),
+			"awx_credential":                 dataSourceCredentialByID(),
 			"awx_credential_azure_key_vault": dataSourceCredentialAzure(),
 		},
 		ConfigureContextFunc: providerConfigure,
