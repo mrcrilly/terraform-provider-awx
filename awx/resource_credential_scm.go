@@ -1,19 +1,30 @@
+/*
+*TBD*
+
+Example Usage
+
+```hcl
+*TBD*
+```
+
+*/
 package awx
 
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/mrcrilly/goawx/client"
-	"strconv"
 )
 
-func resourceCredentialAzureKeyVault() *schema.Resource {
+func resourceCredentialSCM() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCredentialAzureKeyVaultCreate,
-		ReadContext:   resourceCredentialAzureKeyVaultRead,
-		UpdateContext: resourceCredentialAzureKeyVaultUpdate,
+		CreateContext: resourceCredentialSCMCreate,
+		ReadContext:   resourceCredentialSCMRead,
+		UpdateContext: resourceCredentialSCMUpdate,
 		DeleteContext: CredentialsServiceDeleteByID,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -28,28 +39,30 @@ func resourceCredentialAzureKeyVault() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"url": &schema.Schema{
+			"username": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
-			"client": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"secret": &schema.Schema{
+			"password": &schema.Schema{
 				Type:      schema.TypeString,
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 			},
-			"tenant": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"ssh_key_data": &schema.Schema{
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"ssh_key_unlock": &schema.Schema{
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}
 }
 
-func resourceCredentialAzureKeyVaultCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialSCMCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
 
@@ -57,12 +70,12 @@ func resourceCredentialAzureKeyVaultCreate(ctx context.Context, d *schema.Resour
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
 		"organization":    d.Get("organisation_id").(int),
-		"credential_type": 19, // Azure Key Vault
+		"credential_type": 2, // Source Controll
 		"inputs": map[string]interface{}{
-			"url":    d.Get("url").(string),
-			"client": d.Get("client").(string),
-			"secret": d.Get("secret").(string),
-			"tenant": d.Get("tenant").(string),
+			"username":       d.Get("username").(string),
+			"password":       d.Get("password").(string),
+			"ssh_key_data":   d.Get("ssh_key_data").(string),
+			"ssh_key_unlock": d.Get("ssh_key_unlock").(string),
 		},
 	}
 
@@ -78,12 +91,12 @@ func resourceCredentialAzureKeyVaultCreate(ctx context.Context, d *schema.Resour
 	}
 
 	d.SetId(strconv.Itoa(cred.ID))
-	resourceCredentialAzureKeyVaultRead(ctx, d, m)
+	resourceCredentialSCMRead(ctx, d, m)
 
 	return diags
 }
 
-func resourceCredentialAzureKeyVaultRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialSCMRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)
@@ -100,25 +113,26 @@ func resourceCredentialAzureKeyVaultRead(ctx context.Context, d *schema.Resource
 
 	d.Set("name", cred.Name)
 	d.Set("description", cred.Description)
+	d.Set("username", cred.Inputs["username"])
+	d.Set("password", cred.Inputs["password"])
+	d.Set("ssh_key_data", cred.Inputs["ssh_key_data"])
+	d.Set("ssh_key_unlock", cred.Inputs["ssh_key_unlock"])
 	d.Set("organisation_id", cred.OrganizationID)
-	d.Set("url", cred.Inputs["url"])
-	d.Set("client", cred.Inputs["client"])
-	d.Set("secret", d.Get("secret").(string))
-	d.Set("tenant", cred.Inputs["tenant"])
 
 	return diags
 }
 
-func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialSCMUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	keys := []string{
 		"name",
 		"description",
-		"url",
-		"client",
-		//"secret",
-		"tenant",
+		"username",
+		"password",
+		"ssh_key_data",
+		"ssh_key_unlock",
+		"organisation_id",
 	}
 
 	if d.HasChanges(keys...) {
@@ -129,12 +143,12 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
 			"organization":    d.Get("organisation_id").(int),
-			"credential_type": 19, // Azure Key Vault
+			"credential_type": 2, // Source Controll
 			"inputs": map[string]interface{}{
-				"url":    d.Get("url").(string),
-				"client": d.Get("client").(string),
-				"secret": d.Get("secret").(string),
-				"tenant": d.Get("tenant").(string),
+				"username":       d.Get("username").(string),
+				"password":       d.Get("password").(string),
+				"ssh_key_data":   d.Get("ssh_key_data").(string),
+				"ssh_key_unlock": d.Get("ssh_key_unlock").(string),
 			},
 		}
 
@@ -150,5 +164,5 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	return resourceCredentialAzureKeyVaultRead(ctx, d, m)
+	return resourceCredentialSCMRead(ctx, d, m)
 }

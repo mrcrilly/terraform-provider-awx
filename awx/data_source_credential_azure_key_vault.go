@@ -1,18 +1,29 @@
+/*
+*TBD*
+
+Example Usage
+
+```hcl
+*TBD*
+```
+
+*/
 package awx
 
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/mrcrilly/goawx/client"
-	"strconv"
-	"time"
 )
 
 func dataSourceCredentialAzure() *schema.Resource {
 	return &schema.Resource{
-		ReadContext:   dataSourceCredentialAzureRead,
+		ReadContext: dataSourceCredentialAzureRead,
 		Schema: map[string]*schema.Schema{
 			"credential_id": &schema.Schema{
 				Type:     schema.TypeInt,

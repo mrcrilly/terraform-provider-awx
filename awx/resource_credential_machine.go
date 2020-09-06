@@ -1,12 +1,23 @@
+/*
+*TBD*
+
+Example Usage
+
+```hcl
+*TBD*
+```
+
+*/
 package awx
 
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/mrcrilly/goawx/client"
-	"strconv"
 )
 
 func resourceCredentialMachine() *schema.Resource {
