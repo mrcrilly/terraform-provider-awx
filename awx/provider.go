@@ -2,6 +2,7 @@ package awx
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/mrcrilly/goawx/client"
@@ -28,14 +29,31 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"awx_credential_machine":         resourceCredentialMachine(),
-			"awx_credential_azure_key_vault": resourceCredentialAzureKeyVault(),
-			"awx_credential_input_source":    resourceCredentialInputSource(),
+			"awx_credential_azure_key_vault":         resourceCredentialAzureKeyVault(),
+			"awx_credential_input_source":            resourceCredentialInputSource(),
+			"awx_credential_machine":                 resourceCredentialMachine(),
+			"awx_credential_scm":                     resourceCredentialSCM(),
+			"awx_host":                               resourceHost(),
+			"awx_inventory_group":                    resourceInventoryGroup(),
+			"awx_inventory_source":                   resourceInventorySource(),
+			"awx_inventory":                          resourceInventory(),
+			"awx_job_template_credential":            resourceJobTemplateCredentials(),
+			"awx_job_template":                       resourceJobTemplate(),
+			"awx_organization":                       resourceOrganization(),
+			"awx_project":                            resourceProject(),
+			"awx_workflow_job_template_node_allways": resourceWorkflowJobTemplateNodeAllways(),
+			"awx_workflow_job_template_node_failure": resourceWorkflowJobTemplateNodeFailure(),
+			"awx_workflow_job_template_node_success": resourceWorkflowJobTemplateNodeSuccess(),
+			"awx_workflow_job_template_node":         resourceWorkflowJobTemplateNode(),
+			"awx_workflow_job_template":              resourceWorkflowJobTemplate(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"awx_credentials":                dataSourceCredentials(),
-			"awx_credential":                 dataSourceCredentialByID(),
 			"awx_credential_azure_key_vault": dataSourceCredentialAzure(),
+			"awx_credential":                 dataSourceCredentialByID(),
+			"awx_credentials":                dataSourceCredentials(),
+			"awx_inventory_group":            dataSourceInventoryGroup(),
+			"awx_inventory":                  dataSourceInventory(),
+			"awx_organization":               dataSourceOrganization(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
