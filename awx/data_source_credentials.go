@@ -1,12 +1,23 @@
+/*
+Use this data source to query Credential by ID.
+
+Example Usage
+
+```hcl
+*TBD*
+```
+
+*/
 package awx
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/mrcrilly/goawx/client"
-	"strconv"
-	"time"
 )
 
 func dataSourceCredentials() *schema.Resource {
@@ -14,20 +25,20 @@ func dataSourceCredentials() *schema.Resource {
 		ReadContext: dataSourceCredentialsRead,
 		Schema: map[string]*schema.Schema{
 			"credentials": &schema.Schema{
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": &schema.Schema{
-							Type: schema.TypeInt,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"username": &schema.Schema{
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"kind": &schema.Schema{
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -44,9 +55,9 @@ func dataSourceCredentialsRead(ctx context.Context, d *schema.ResourceData, m in
 	creds, _, err := client.CredentialsService.ListCredentials(map[string]string{})
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Unable to fetch credentials",
-			Detail:        "Unable to fetch credentials from AWX API",
+			Severity: diag.Error,
+			Summary:  "Unable to fetch credentials",
+			Detail:   "Unable to fetch credentials from AWX API",
 		})
 		return diags
 	}
@@ -54,9 +65,9 @@ func dataSourceCredentialsRead(ctx context.Context, d *schema.ResourceData, m in
 	parsedCreds := make([]map[string]interface{}, 0)
 	for _, c := range creds {
 		parsedCreds = append(parsedCreds, map[string]interface{}{
-			"id": c.ID,
+			"id":       c.ID,
 			"username": c.Inputs["username"],
-			"kind": c.Kind,
+			"kind":     c.Kind,
 		})
 	}
 
